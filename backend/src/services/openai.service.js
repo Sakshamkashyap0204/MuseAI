@@ -1,7 +1,7 @@
 'use strict';
 
 const Groq = require('groq-sdk');
-const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const env = require('../config/env');
 const AppError = require('../utils/AppError');
 
@@ -33,11 +33,19 @@ const LENGTH_INSTRUCTIONS = {
   long: 'Make it substantially developed: approximately 900-1300 words for a story, 28-45 lines for a poem, or a multi-beat joke with a complete punchline.',
 };
 
+// Handles both Groq (error.status) and Gemini (error.status / error.message) rate limit formats
+function isRateLimit(error) {
+  return error.status === 429 || (typeof error.message === 'string' && error.message.includes('429'));
+}
+function isAuthError(error) {
+  return error.status === 401 || (typeof error.message === 'string' && error.message.includes('401'));
+}
+
 class GroqService {
   constructor() {
     this.client = new Groq({ apiKey: env.groq.apiKey });
     this.model = env.groq.model;
-    this.visionClient = env.vision.apiKey ? new OpenAI({ apiKey: env.vision.apiKey }) : null;
+    this.visionClient = env.vision.apiKey ? new GoogleGenerativeAI(env.vision.apiKey) : null;
   }
 
   _buildUserPrompt(type, prompt, parameters) {
@@ -56,16 +64,14 @@ class GroqService {
     return parts.join('\n');
   }
 
-  async generate(type, prompt, parameters = {}, attachments = [], conversationContext = [], memories = []) {
-    const systemPrompt = SYSTEM_PROMPTS[type];
+  async generate(type, prompt, parameters = {}, attachments = [], conversationContext = [], memories = [], options = {}) {
+    const systemPrompt = options.systemOverride || SYSTEM_PROMPTS[type];
     if (!systemPrompt) {
       throw new AppError(`Unsupported content type: ${type}`, 400);
     }
 
     const imageAttachments = attachments.filter((attachment) => attachment.kind === 'image');
-    if (imageAttachments.length && !this.visionClient) {
-      throw new AppError('Image generation requires OPENAI_VISION_API_KEY to be configured.', 422);
-    }
+
     const attachmentContext = attachments
       .filter((attachment) => attachment.kind === 'text')
       .map((attachment) => `\nAttachment: ${attachment.filename}\n${attachment.extractedText}`)
@@ -77,74 +83,64 @@ class GroqService {
       ? `\nRelevant user preferences and facts:\n${memories.map((memory) => `- ${memory.content}`).join('\n')}`
       : '';
     const userPrompt = `${this._buildUserPrompt(type, prompt, parameters)}${conversationText}${memoryText}${attachmentContext ? `\nUse the following attachment text as source context:\n${attachmentContext}` : ''}`;
-    const messages = [{ role: 'user', content: [
-      { type: 'text', text: userPrompt },
-      ...imageAttachments.map((attachment) => ({
-        type: 'image_url',
-        image_url: { url: attachment.imageData },
-      })),
-    ] }];
     const maxTokens = LENGTH_TOKENS[parameters.length] || LENGTH_TOKENS.medium;
 
     try {
-      const response = imageAttachments.length
-        ? await this.visionClient.chat.completions.create({
-          model: env.vision.model,
+      let content;
+      let tokensUsed = 0;
+      let modelUsed = this.model;
+
+      if (imageAttachments.length) {
+        if (!this.visionClient) throw new AppError('Image attachments require GEMINI_API_KEY to be configured.', 422);
+        const geminiModel = this.visionClient.getGenerativeModel({ model: env.vision.model });
+        const imageParts = imageAttachments.map((a) => ({
+          inlineData: { data: a.imageData.split(',')[1], mimeType: a.mimeType },
+        }));
+        const result = await geminiModel.generateContent([
+          `${systemPrompt}\n\n${userPrompt}`,
+          ...imageParts,
+        ]);
+        content = result.response.text()?.trim();
+        modelUsed = env.vision.model;
+        tokensUsed = result.response.usageMetadata?.totalTokenCount || 0;
+      } else {
+        const response = await this.client.chat.completions.create({
+          model: this.model,
           messages: [
             { role: 'system', content: systemPrompt },
-            ...messages,
+            { role: 'user', content: userPrompt },
           ],
           max_tokens: maxTokens,
           temperature: 0.85,
-        })
-        : await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        max_tokens: maxTokens,
-        temperature: 0.85,
-      });
+        });
+        content = response.choices[0]?.message?.content?.trim();
+        tokensUsed = response.usage?.total_tokens || 0;
+        modelUsed = response.model;
 
-      let content = response.choices[0]?.message?.content?.trim();
-      if (!content) {
-        throw new AppError('AI returned an empty response', 502);
-      }
-
-      if (response.choices[0]?.finish_reason === 'length') {
-        const continuation = imageAttachments.length
-          ? await this.visionClient.chat.completions.create({
-            model: env.vision.model,
-            messages: [{ role: 'system', content: 'Continue the creative work from the exact stopping point. Do not repeat text. Finish it with a proper ending and return only the continuation.' }, { role: 'user', content }],
-            max_tokens: 500,
-            temperature: 0.75,
-          })
-          : await this.client.chat.completions.create({
+        if (response.choices[0]?.finish_reason === 'length') {
+          const continuation = await this.client.chat.completions.create({
             model: this.model,
             messages: [{ role: 'system', content: 'Continue the creative work from the exact stopping point. Do not repeat text. Finish it with a proper ending and return only the continuation.' }, { role: 'user', content }],
             max_tokens: 500,
             temperature: 0.75,
           });
-        const continuationText = continuation.choices[0]?.message?.content?.trim();
-        if (continuationText) content = `${content}\n${continuationText}`;
+          const continuationText = continuation.choices[0]?.message?.content?.trim();
+          if (continuationText) content = `${content}\n${continuationText}`;
+        }
       }
+
+      if (!content) throw new AppError('AI returned an empty response', 502);
 
       return {
         content,
-        tokensUsed: response.usage?.total_tokens || 0,
-        model: response.model,
+        tokensUsed,
+        model: modelUsed,
       };
     } catch (error) {
       if (error instanceof AppError) throw error;
-
-      if (error.status === 429) {
-        throw new AppError('AI rate limit reached. Please try again shortly.', 429);
-      }
-      if (error.status === 401) {
-        throw new AppError('AI service authentication failed.', 502);
-      }
-
+      console.error('[GroqService] generate error:', error?.status, error?.message);
+      if (isRateLimit(error)) throw new AppError('Rate limit exceeded. Please try again later.', 429);
+      if (isAuthError(error)) throw new AppError('AI service authentication failed.', 502);
       throw new AppError('AI generation failed. Please try again.', 502);
     }
   }
@@ -171,8 +167,8 @@ If the intended meaning is reasonably clear, answer naturally without interrupti
       return { content, tokensUsed: response.usage?.total_tokens || 0, model: response.model };
     } catch (error) {
       if (error instanceof AppError) throw error;
-      if (error.status === 429) throw new AppError('AI rate limit reached. Please try again shortly.', 429);
-      if (error.status === 401) throw new AppError('AI service authentication failed.', 502);
+      if (isRateLimit(error)) throw new AppError('Rate limit exceeded. Please try again later.', 429);
+      if (isAuthError(error)) throw new AppError('AI service authentication failed.', 502);
       throw new AppError('AI chat failed. Please try again.', 502);
     }
   }

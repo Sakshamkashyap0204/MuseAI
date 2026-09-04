@@ -67,6 +67,7 @@ class AttachmentService {
       return Attachment.create(values);
     } catch (error) {
       if (error instanceof AppError) throw error;
+      console.error('[AttachmentService] processing error:', error);
       throw new AppError('Attachment could not be processed', 422);
     }
   }

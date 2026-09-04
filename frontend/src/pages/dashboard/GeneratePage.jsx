@@ -241,6 +241,12 @@ function GeneratePage() {
                 maxLength={1000}
                 error={errors.prompt?.message}
                 className="pb-12"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(onSubmit)();
+                  }
+                }}
                 {...field}
               />
             )}
@@ -333,6 +339,7 @@ function GeneratePage() {
           <RiSparklingLine className="text-base" />
           {isGenerating ? 'Generating...' : 'Generate'}
         </Button>
+        <p className="text-center text-xs text-[var(--color-text-muted)]">Enter to generate · Shift+Enter for new line</p>
       </form>
 
       {/* Result */}

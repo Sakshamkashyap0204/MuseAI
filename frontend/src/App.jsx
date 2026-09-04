@@ -16,6 +16,7 @@ const HistoryPage = lazy(() => import('./pages/dashboard/HistoryPage'));
 const SavedPage = lazy(() => import('./pages/dashboard/SavedPage'));
 const ProfilePage = lazy(() => import('./pages/dashboard/ProfilePage'));
 const SettingsPage = lazy(() => import('./pages/dashboard/SettingsPage'));
+const VideoStudioPage = lazy(() => import('./pages/dashboard/VideoStudioPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const PageLoader = () => (
@@ -46,6 +47,7 @@ function App() {
                 <Route path="/dashboard/saved" element={<SavedPage />} />
                 <Route path="/dashboard/profile" element={<ProfilePage />} />
                 <Route path="/dashboard/settings" element={<SettingsPage />} />
+                <Route path="/dashboard/video-studio" element={<VideoStudioPage />} />
               </Route>
             </Route>
 

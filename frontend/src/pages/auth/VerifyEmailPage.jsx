@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { RiQuillPenLine, RiMailLine } from 'react-icons/ri';
+import { RiQuillPenLine, RiMailLine, RiArrowLeftLine } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import { authApi } from '../../api/auth.api';
 import Button from '../../components/ui/Button';
@@ -10,6 +10,12 @@ function VerifyEmailPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const email = state?.email || '';
+
+  const handleBack = () => {
+    navigate('/register', {
+      state: { name: state?.name, email: state?.email, password: state?.password },
+    });
+  };
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -95,6 +101,14 @@ function VerifyEmailPage() {
           </div>
           <span className="font-semibold text-lg text-[var(--color-text-primary)] tracking-tight">Muse</span>
         </div>
+
+        <button
+          onClick={handleBack}
+          className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] mb-6 transition-colors"
+        >
+          <RiArrowLeftLine />
+          Edit details
+        </button>
 
         <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-subtle)] border border-[var(--color-accent)]/20 flex items-center justify-center mb-5">
           <RiMailLine className="text-[var(--color-accent)] text-xl" />

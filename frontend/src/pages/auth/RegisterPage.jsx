@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { RiQuillPenLine } from 'react-icons/ri';
 import toast from 'react-hot-toast';
@@ -13,18 +13,26 @@ import Button from '../../components/ui/Button';
 function RegisterPage() {
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
+  const { state } = useLocation();
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(registerSchema) });
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: state?.name || '',
+      email: state?.email || '',
+      password: state?.password || '',
+    },
+  });
 
   const onSubmit = async (values) => {
     try {
       await registerUser(values);
       toast.success('Check your email for the verification code');
-      navigate('/verify-email', { state: { email: values.email } });
+      navigate('/verify-email', { state: { email: values.email, name: values.name, password: values.password } });
     } catch (error) {
       toast.error(error.response?.data?.message || 'Registration failed');
     }

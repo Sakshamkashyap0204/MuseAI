@@ -12,6 +12,7 @@ import {
   RiAddLine,
   RiCloseLine,
   RiSearchLine,
+  RiVideoLine,
 } from 'react-icons/ri';
 import { useEffect, useState } from 'react';
 import { chatApi } from '../../api/chat.api';
@@ -21,6 +22,7 @@ import toast from 'react-hot-toast';
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Generate', icon: RiSparklingLine, end: true },
   { to: '/dashboard/chat', label: 'Chat', icon: RiChat3Line },
+  { to: '/dashboard/video-studio', label: 'Video Studio', icon: RiVideoLine },
   { to: '/dashboard/history', label: 'History', icon: RiHistoryLine },
   { to: '/dashboard/saved', label: 'Saved', icon: RiBookmarkLine },
   { to: '/dashboard/profile', label: 'Profile', icon: RiUserLine },

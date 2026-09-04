@@ -23,6 +23,7 @@ const TYPE_FILTERS = [
   { value: 'story', label: 'Stories' },
   { value: 'poem', label: 'Poems' },
   { value: 'joke', label: 'Jokes' },
+  { value: 'video_studio', label: 'Video Studio' },
 ];
 
 function HistoryItem({ item, onDelete, onToggleSave }) {

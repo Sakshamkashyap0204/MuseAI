@@ -18,6 +18,7 @@ const userRoutes = require('./routes/user.routes');
 const chatRoutes = require('./routes/chat.routes');
 const attachmentRoutes = require('./routes/attachment.routes');
 const memoryRoutes = require('./routes/memory.routes');
+const videoStudioRoutes = require('./routes/videoStudio.routes');
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.use('/api/v1/users', apiLimiter, userRoutes);
 app.use('/api/v1/chat', apiLimiter, chatRoutes);
 app.use('/api/v1/attachments', apiLimiter, attachmentRoutes);
 app.use('/api/v1/memories', apiLimiter, memoryRoutes);
+app.use('/api/v1/video-studio', apiLimiter, videoStudioRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────
 app.use((req, res) => {

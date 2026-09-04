@@ -2,7 +2,7 @@
 
 const mongoose = require('mongoose');
 
-const CONTENT_TYPES = ['story', 'poem', 'joke'];
+const CONTENT_TYPES = ['story', 'poem', 'joke', 'video_studio'];
 
 const generationSchema = new mongoose.Schema(
   {

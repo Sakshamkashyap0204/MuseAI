@@ -38,8 +38,8 @@ const env = {
   },
 
   vision: {
-    apiKey: process.env.OPENAI_VISION_API_KEY || null,
-    model: process.env.OPENAI_VISION_MODEL || 'gpt-4o-mini',
+    apiKey: process.env.GEMINI_API_KEY || null,
+    model: process.env.GEMINI_VISION_MODEL || 'gemini-2.0-flash',
   },
 
   cors: {
