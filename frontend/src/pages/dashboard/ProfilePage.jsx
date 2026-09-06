@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { RiBookOpenLine, RiQuillPenLine, RiEmotionLaughLine } from 'react-icons/ri';
+import { RiBookOpenLine, RiQuillPenLine, RiEmotionLaughLine, RiVideoLine } from 'react-icons/ri';
 import { userApi } from '../../api/user.api';
 import { useAuth } from '../../store/AuthContext';
 import Input from '../../components/ui/Input';
@@ -21,6 +21,11 @@ const STAT_ICONS = {
   story: RiBookOpenLine,
   poem: RiQuillPenLine,
   joke: RiEmotionLaughLine,
+  video_studio: RiVideoLine,
+};
+
+const STAT_LABELS = {
+  video_studio: 'Video Studio',
 };
 
 function ProfilePage() {
@@ -77,7 +82,7 @@ function ProfilePage() {
               </Card>
             ))
           : stats && Object.entries(stats.byType).map(([type, count]) => {
-              const Icon = STAT_ICONS[type];
+              const Icon = STAT_ICONS[type] || RiBookOpenLine;
               return (
                 <motion.div
                   key={type}
@@ -91,7 +96,7 @@ function ProfilePage() {
                         {count}
                       </span>
                     </div>
-                    <p className="text-xs text-[var(--color-text-muted)] capitalize">{type}s</p>
+                    <p className="text-xs text-[var(--color-text-muted)] capitalize">{STAT_LABELS[type] || `${type}s`}</p>
                   </Card>
                 </motion.div>
               );

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   RiDeleteBinLine,
@@ -9,8 +10,10 @@ import {
   RiArrowDownSLine,
   RiArrowUpSLine,
   RiHistoryLine,
+  RiChat3Line,
 } from 'react-icons/ri';
 import { generationApi } from '../../api/generation.api';
+import { chatApi } from '../../api/chat.api';
 import { SkeletonCard } from '../../components/ui/Skeleton';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
@@ -26,19 +29,28 @@ const TYPE_FILTERS = [
   { value: 'video_studio', label: 'Video Studio' },
 ];
 
-function HistoryItem({ item, onDelete, onToggleSave }) {
+function HistoryItem({ item, onDelete, onToggleSave, onContinueInChat }) {
   const [expanded, setExpanded] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isContinuing, setIsContinuing] = useState(false);
   const { copied, copy } = useCopyToClipboard();
 
   const handleDelete = () => {
     if (!confirmDelete) {
       setConfirmDelete(true);
-      // Auto-cancel confirm after 3 seconds
       setTimeout(() => setConfirmDelete(false), 3000);
       return;
     }
     onDelete(item._id);
+  };
+
+  const handleContinue = async () => {
+    setIsContinuing(true);
+    try {
+      await onContinueInChat(item);
+    } finally {
+      setIsContinuing(false);
+    }
   };
 
   return (
@@ -65,6 +77,15 @@ function HistoryItem({ item, onDelete, onToggleSave }) {
 
         {/* Actions */}
         <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={handleContinue}
+            disabled={isContinuing}
+            title="Continue in Chat"
+            className="flex items-center gap-1 px-2 py-1.5 rounded-[var(--radius-sm)] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-subtle)] transition-colors disabled:opacity-50"
+          >
+            <RiChat3Line />
+            {isContinuing ? 'Opening...' : 'Continue'}
+          </button>
           <button
             onClick={() => copy(item.content)}
             title="Copy content"
@@ -131,6 +152,22 @@ function HistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState('');
+  const navigate = useNavigate();
+
+  const handleContinueInChat = async (item) => {
+    try {
+      const { data } = await chatApi.createConversation();
+      const conversationId = data.data.conversation._id;
+      await chatApi.sendMessage(
+        conversationId,
+        `Here is a ${item.type} I generated earlier:\n\nPrompt: ${item.prompt}\n\n${item.content}\n\nLet's continue working on this.`
+      );
+      window.dispatchEvent(new Event('chat-updated'));
+      navigate(`/dashboard/chat/${conversationId}`);
+    } catch {
+      toast.error('Failed to open chat');
+    }
+  };
 
   const fetchHistory = useCallback(async () => {
     setIsLoading(true);
@@ -242,6 +279,7 @@ function HistoryPage() {
                   item={item}
                   onDelete={handleDelete}
                   onToggleSave={handleToggleSave}
+                  onContinueInChat={handleContinueInChat}
                 />
               </motion.div>
             ))}
