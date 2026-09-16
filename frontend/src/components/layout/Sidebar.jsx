@@ -86,7 +86,7 @@ function Sidebar() {
   };
 
   return (
-    <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col border-r border-[var(--color-border)] bg-[var(--color-surface-1)]">
+    <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col border-r border-[var(--color-border)] bg-[var(--color-surface-1)] bg-gradient-to-b from-[var(--color-surface-1)] to-[var(--color-surface)]">
       {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-2.5">

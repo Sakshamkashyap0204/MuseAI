@@ -34,7 +34,7 @@ function GenerationResult({ generation, onToggleSave, isSaving = false }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
-      <Card className="p-6">
+      <Card className="p-6 transition-all duration-200 hover:border-[var(--color-accent)]/20">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-5">
           <div className="flex items-center gap-2.5">
