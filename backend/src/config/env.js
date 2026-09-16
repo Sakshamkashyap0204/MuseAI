@@ -7,8 +7,6 @@ const REQUIRED_VARS = [
   'JWT_SECRET',
   'JWT_REFRESH_SECRET',
   'OPENAI_API_KEY',
-  'SMTP_USER',
-  'SMTP_PASS',
 ];
 
 const missing = REQUIRED_VARS.filter((key) => !process.env[key]);
