@@ -70,10 +70,6 @@ class AuthService {
 
     if (!user.isActive) throw new AppError('Account has been deactivated', 403);
 
-    if (!user.isEmailVerified) {
-      throw new AppError('Please verify your email before logging in', 403);
-    }
-
     const accessToken = signAccessToken({ userId: user._id });
     const refreshToken = await this._createRefreshToken(user._id, meta);
 
@@ -82,8 +78,8 @@ class AuthService {
 
   async forgotPassword(email) {
     const user = await User.findOne({ email });
-    // Always return success to prevent email enumeration
-    if (!user || !user.isEmailVerified) return;
+    // Always return success to prevent email enumeration.
+    if (!user) return;
 
     const otp = generateOtp();
     user.passwordResetOtp = otp;
