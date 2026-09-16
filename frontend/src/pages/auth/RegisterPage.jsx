@@ -31,8 +31,8 @@ function RegisterPage() {
   const onSubmit = async (values) => {
     try {
       await registerUser(values);
-      toast.success('Check your email for the verification code');
-      navigate('/verify-email', { state: { email: values.email, name: values.name, password: values.password } });
+      toast.success('Account created! Please sign in.');
+      navigate('/login');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Registration failed');
     }
@@ -55,7 +55,7 @@ function RegisterPage() {
 
         <h1 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-1">Create your account</h1>
         <p className="text-sm text-[var(--color-text-secondary)] mb-8">
-          We'll send a verification code to your email
+          Start creating with AI in seconds
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

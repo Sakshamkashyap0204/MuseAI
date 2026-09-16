@@ -18,32 +18,10 @@ function generateOtp() {
 class AuthService {
   async register(name, email, password) {
     const existing = await User.findOne({ email });
-    if (existing && existing.isEmailVerified) {
-      throw new AppError('An account with this email already exists', 409);
-    }
+    if (existing) throw new AppError('An account with this email already exists', 409);
 
-    const otp = generateOtp();
-    const otpExpires = new Date(Date.now() + OTP_TTL_MS);
-
-    if (existing && !existing.isEmailVerified) {
-      // Resend OTP to existing unverified account
-      existing.emailVerificationOtp = otp;
-      existing.emailVerificationExpires = otpExpires;
-      await existing.save();
-      await emailService.sendVerificationOtp(email, existing.name, otp);
-      return { email, message: 'Verification code resent' };
-    }
-
-    const user = await User.create({
-      name,
-      email,
-      password,
-      emailVerificationOtp: otp,
-      emailVerificationExpires: otpExpires,
-    });
-
-    await emailService.sendVerificationOtp(email, name, otp);
-    return { email: user.email, message: 'Verification code sent' };
+    await User.create({ name, email, password, isEmailVerified: true });
+    return { email, message: 'Account created' };
   }
 
   async verifyEmail(email, otp) {

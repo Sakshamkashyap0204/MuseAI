@@ -14,8 +14,8 @@ const COOKIE_OPTIONS = {
 async function register(req, res, next) {
   try {
     const { name, email, password } = req.body;
-    const result = await authService.register(name, email, password);
-    sendSuccess(res, 201, 'Verification code sent to your email', { email: result.email });
+    await authService.register(name, email, password);
+    sendSuccess(res, 201, 'Account created successfully');
   } catch (error) {
     next(error);
   }
