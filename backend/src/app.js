@@ -22,6 +22,9 @@ const videoStudioRoutes = require('./routes/videoStudio.routes');
 
 const app = express();
 
+// ─── Trust Proxy (required for Render/reverse proxies) ────
+app.set('trust proxy', 1);
+
 // ─── Security Headers ─────────────────────────────────────
 app.use(helmet());
 
