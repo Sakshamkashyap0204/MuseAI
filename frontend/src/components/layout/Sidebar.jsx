@@ -29,7 +29,7 @@ const NAV_ITEMS = [
   { to: '/dashboard/settings', label: 'Settings', icon: RiSettings3Line },
 ];
 
-function Sidebar() {
+function Sidebar({isOpen, onClose}) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [conversations, setConversations] = useState([]);
@@ -86,18 +86,38 @@ function Sidebar() {
   };
 
   return (
-    <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col border-r border-[var(--color-border)] bg-[var(--color-surface-1)] bg-gradient-to-b from-[var(--color-surface-1)] to-[var(--color-surface)]">
+    <aside
+  className={`
+    fixed inset-y-0 left-0 z-50 w-72
+    flex flex-col border-r border-[var(--color-border)]
+    bg-[var(--color-surface-1)]
+    bg-gradient-to-b from-[var(--color-surface-1)] to-[var(--color-surface)]
+    transform transition-transform duration-300 ease-in-out
+    lg:static lg:z-auto lg:w-60 lg:translate-x-0
+    ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+  `}
+       >
       {/* Logo */}
-      <div className="h-16 flex items-center px-5 border-b border-[var(--color-border)]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-[var(--color-accent)] flex items-center justify-center">
-            <RiQuillPenLine className="text-white text-sm" />
-          </div>
-          <span className="font-semibold text-[var(--color-text-primary)] tracking-tight">
+      <div className="h-16 flex items-center justify-between px-5 border-b border-[var(--color-border)]">
+       <div className="flex items-center gap-2.5">
+         <div className="w-7 h-7 rounded-lg bg-[var(--color-accent)] flex items-center justify-center">
+          <RiQuillPenLine className="text-white text-sm" />
+         </div>
+
+           <span className="font-semibold text-[var(--color-text-primary)] tracking-tight">
             Muse
           </span>
-        </div>
-      </div>
+         </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+        className="lg:hidden p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]"
+        aria-label="Close sidebar"
+         >
+         <RiCloseLine className="text-xl" />
+        </button>
+       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
