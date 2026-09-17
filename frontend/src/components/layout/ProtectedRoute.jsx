@@ -6,8 +6,9 @@ function ProtectedRoute() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-surface)]">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-[var(--color-surface)]">
         <div className="w-6 h-6 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-[var(--color-text-muted)]">Starting up, please wait...</p>
       </div>
     );
   }

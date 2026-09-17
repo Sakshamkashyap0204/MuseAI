@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Safety net — if loadUser somehow never resolves, unblock the app after 5s
-    const timeout = setTimeout(() => setIsLoading(false), 5000);
+    const timeout = setTimeout(() => setIsLoading(false), 60000);
     loadUser().finally(() => clearTimeout(timeout));
   }, [loadUser]);
 
