@@ -25,6 +25,12 @@ const PageLoader = () => (
   </div>
 );
 
+class ChunkErrorBoundary extends Error {}
+
+window.addEventListener('vite:preloadError', () => {
+  window.location.reload();
+});
+
 function App() {
   return (
     <BrowserRouter>
